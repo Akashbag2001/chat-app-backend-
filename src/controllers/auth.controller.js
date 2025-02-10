@@ -44,53 +44,65 @@ export const signup = async (req, res) => {
 };
 
 export const login = async (req, res) => {
-  const {email, password} = req.body;
+  const { email, password } = req.body;
   try {
-    const user = await User.findOne({email})
+    const user = await User.findOne({ email });
 
-    if(!user){
-      return res.status(400).json({message: "Invalid Credential!"})
+    if (!user) {
+      return res.status(400).json({ message: "Invalid Credential!" });
     }
-    const isCorrectPassword = bcrypt.compare(password, user.password)
-    if(!isCorrectPassword){
-      return res.status(400).json({message: "Invalid Credential!"})
+    const isCorrectPassword = bcrypt.compare(password, user.password);
+    if (!isCorrectPassword) {
+      return res.status(400).json({ message: "Invalid Credential!" });
     }
 
-    generateToken(user._id,res);
+    generateToken(user._id, res);
 
-     res.status(200).json({
+    res.status(200).json({
       _id: user._id,
       fullName: user.fullName,
       email: user.email,
-      profilePic: user.profilePic
-    })
+      profilePic: user.profilePic,
+    });
   } catch (error) {
-    console.log("Error in login Controller",error.message)
-    res.status(500).json({message: "Internal Server Error!!" })
+    console.log("Error in login Controller", error.message);
+    res.status(500).json({ message: "Internal Server Error!!" });
   }
 };
 
 export const logout = (req, res) => {
   try {
-    res.cookie("jwt","",{maxAge:0})
-    res.status(200).json({message: "Logged Out Successfully!"})
+    res.cookie("jwt", "", { maxAge: 0 });
+    res.status(200).json({ message: "Logged Out Successfully!" });
   } catch (error) {
-    console.log("Error in logout controller", error.message)
-    res.status(500).json({message: "Internal Server Error!!" })
+    console.log("Error in logout controller", error.message);
+    res.status(500).json({ message: "Internal Server Error!!" });
   }
 };
 
-export const updateProfile = async()=>{
+export const updateProfile = async () => {
   try {
-    const {profilePic} = req.body;
+    const { profilePic } = req.body;
     const userId = req.body._id;
 
-    if(!profilePic){
-      return res.status(400).json({message: "Profile picture is required!"})
+    if (!profilePic) {
+      return res.status(400).json({ message: "Profile picture is required!" });
     }
-    const uploadResponse = await cloudinary.uploader.upload(profilePic)
-    const updatedUser = await User.findByIdAndUpdate(userId,{profilePic:uploadResponse.secure_url},{new:true})
+    const uploadResponse = await cloudinary.uploader.upload(profilePic);
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { profilePic: uploadResponse.secure_url },
+      { new: true }
+    );
+  } catch (error) {}
+};
+
+//checking for authentication after refresh
+export const checkAuth =  (req, res) => {
+  try {
+    res.status(200).json(req.user);
   } catch (error) {
-    
+    console.log("Error in checkAuth controller", error.message);
+    res.status(500).json({ message: "Internal Server Error!!" });
   }
-}
+};
